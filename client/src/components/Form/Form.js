@@ -1,15 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TextField, Button, Typography, Paper } from "@material-ui/core";
 import FileBase from "react-file-base64";
 import { useDispatch, useSelector } from "react-redux";
 
-import { createPost } from "../../actions/posts";
+import { createPost, updatePost } from "../../actions/posts";
 
 import useStyles from "./styles";
 
 const Form = ({ setCurrentId, currentId }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
+  const post = useSelector((state) =>
+    currentId ? state.posts.find((p) => p._id === currentId) : null
+  );
+  // console.log(post, "jbkg");
 
   const [postData, setPostData] = useState({
     creator: "",
@@ -20,6 +24,7 @@ const Form = ({ setCurrentId, currentId }) => {
   });
 
   const clear = () => {
+    setCurrentId(null);
     setPostData({
       creator: "",
       title: "",
@@ -29,9 +34,22 @@ const Form = ({ setCurrentId, currentId }) => {
     });
   };
 
+  useEffect(() => {
+    if (post) {
+      setPostData(post);
+    }
+  }, [post]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(createPost(postData));
+
+    if (currentId) {
+      dispatch(updatePost(currentId, postData));
+      clear();
+    } else {
+      dispatch(createPost(postData));
+      clear();
+    }
   };
 
   return (
@@ -42,6 +60,9 @@ const Form = ({ setCurrentId, currentId }) => {
         className={`${classes.root} ${classes.form}`}
         onSubmit={handleSubmit}
       >
+        <Typography variant="h6">
+          {currentId ? `Editing "${post.title}"` : "Creating a Memory"}
+        </Typography>
         <TextField
           name="creator"
           variant="outlined"
